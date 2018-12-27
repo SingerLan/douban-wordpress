@@ -4,6 +4,12 @@
 采集豆瓣“我看过的电影”，整合到wordpress
 本来想写一个wordpres插件，结果没有时间学加上懒，就没有写成插件
 
+#### 截图
+![输入图片说明](https://images.gitee.com/uploads/images/2018/1227/115854_0f39d1ca_2322897.png "m.lookoro.cn_index.php_douban_movie (2).png")
+
+#### 演示地址
+[http://m.lookoro.cn/index.php/douban_movie](http://m.lookoro.cn/index.php/douban_movie)
+
 #### 安装教程（不是插件，需要修改PHP文件）
 
 1. 下载clone文件到本地
