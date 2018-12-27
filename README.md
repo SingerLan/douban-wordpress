@@ -2,36 +2,48 @@
 
 #### 介绍
 采集豆瓣“我看过的电影”，整合到wordpress
+本来想写一个wordpres插件，结果没有时间学加上懒，就没有写成插件
 
-#### 软件架构
-软件架构说明
+#### 安装教程（不是插件，需要修改PHP文件）
 
-
-#### 安装教程
-
-1. xxxx
-2. xxxx
-3. xxxx
+1. 下载clone文件到本地
+2. 修改douban.php文件439行440行
+```
+$UserID="181244075";//我的豆瓣ID
+$PageSize=20;//一页显示20部电影
+```
+UserID：用户ID，在豆瓣中可以查到
+PageSize：自己随意设置
+3. 将下载douban文件夹上传到wordpress根目录
+4. 现在就可调用php文件，调用URL /douban/douban.php?type=movie&from=0 
+5. 以上步骤即可调用到“我看过的电影”，如需整合到wordpress需继续配置
+6. 新建wordpress页面
+7. 如支持自定义栏目，名称中插入head 值中插入asset中的js css文件，如不支持接步骤8
+8. 我的主题不能插入head自定义栏目，我都是通过js加载的
+```
+<h1 style="text-align: center;">我看过的电影</h1>
+<script type="text/javascript">
+    var head = document.getElementsByTagName('head')[0];
+    var link = document.createElement('link');
+    link.type='text/css';
+    link.rel = 'stylesheet';
+    link.href = '//m.lookoro.cn/douban/assets/DoubanBoard.04.css';
+    head.appendChild(link);
+</script>
+<script>var DoubanPageSize=20;</script>
+<script type="text/javascript" src="//m.lookoro.cn/douban/assets/DoubanBoard.04.js"></script>
+<div id="douban-movie-list" class="doubanboard-list" style="margin-top: -70px;"></div>
+```
+DoubanPageSize 页面中的显示多少部电影
+douban-movie-list 显示电影海报的div，加“margin-top: -70px;”是因为上方js占位
+9. 发布页面
 
 #### 使用说明
 
-1. xxxx
-2. xxxx
-3. xxxx
+1. 需保证cache可写
+2. 使用前先删除movie.json文件，json文件已储存我的影单
+3. 也可获取单部电影详情、单部书籍、读书清单等, 方法保留，可以调用
 
-#### 参与贡献
+#### 感谢
 
-1. Fork 本仓库
-2. 新建 Feat_xxx 分支
-3. 提交代码
-4. 新建 Pull Request
-
-
-#### 码云特技
-
-1. 使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2. 码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3. 你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4. [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5. 码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6. 码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+1. 基本借鉴于 [熊猫小A](http://https://github.com/AlanDecode) Typecho-Plugin-DoubanBoard插件
