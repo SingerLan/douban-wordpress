@@ -12,20 +12,20 @@
 
 #### 安装教程（不是插件，需要修改PHP文件）
 
-1. 下载clone文件到本地
-2. 修改douban.php文件439行440行
+- 下载clone文件到本地
+- 修改douban.php文件439行440行
 ```
 $UserID="181244075";//我的豆瓣ID
 $PageSize=20;//一页显示20部电影
+//UserID：用户ID，在豆瓣中可以查到
+//PageSize：自己随意设置
 ```
-UserID：用户ID，在豆瓣中可以查到
-PageSize：自己随意设置
-3. 将下载douban文件夹上传到wordpress根目录
-4. 现在就可调用php文件，调用URL /douban/douban.php?type=movie&from=0 
-5. 以上步骤即可调用到“我看过的电影”，如需整合到wordpress需继续配置
-6. 新建wordpress页面
-7. 如支持自定义栏目，名称中插入head 值中插入asset中的js css文件，如不支持接步骤8
-8. 我的主题不能插入head自定义栏目，我都是通过js加载的
+- 将下载douban文件夹上传到wordpress根目录
+- 现在就可调用php文件，调用URL /douban/douban.php?type=movie&from=0 
+- 以上步骤即可调用到“我看过的电影”，如需整合到wordpress需继续配置
+- 新建wordpress页面
+- 如支持自定义栏目，名称中插入head 值中插入asset中的js css文件，如不支持接步骤8
+- 我的主题不能插入head自定义栏目，我都是通过js加载的
 ```
 <h1 style="text-align: center;">我看过的电影</h1>
 <script type="text/javascript">
