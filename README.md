@@ -3,6 +3,7 @@
 #### 介绍
 采集豆瓣“我看过的电影”，整合到wordpress
 本来想写一个wordpres插件，结果没有时间学加上懒，就没有写成插件
+近期更新：[提过加载速度](http://m.lookoro.cn/index.php/271.html)
 
 #### 截图
 ![输入图片说明](https://images.gitee.com/uploads/images/2018/1227/115854_0f39d1ca_2322897.png "m.lookoro.cn_index.php_douban_movie (2).png")
