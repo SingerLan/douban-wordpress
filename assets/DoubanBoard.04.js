@@ -100,6 +100,7 @@ DoubanBoard = {
                 $("#loadMoreMovies").html("没有啦");
             }
             $.each(result,function(i,item){
+				if (item.name == "") {return false;}
                 var html=`<div id="doubanboard-movie-item-`+String(curMovies)+`" class="doubanboard-item" style="border: 2px solid;border-radius: 5px;-moz-border-radius:25px;">
                             <div class="doubanboard-thumb" style="background-image:url(`+item.img+`)"></div>
                             <div class="doubanboard-title"><a href="`+item.url+`" target="_blank">`+item.name+`</a></div>
