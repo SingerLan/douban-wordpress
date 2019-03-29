@@ -1,24 +1,26 @@
 <?php  
-
+ini_set('max_execution_time','0');
 class DoubanAPI
 {
     /**
-     * ´Ó±¾µØ¶ÁÈ¡»º´æĞÅÏ¢£¬Èô²»´æÔÚÔò´´½¨£¬Èô¹ıÆÚÔò¸üĞÂ¡£²¢·µ»Ø¸ñÊ½»¯ JSON
+     * ä»æœ¬åœ°è¯»å–ç¼“å­˜ä¿¡æ¯ï¼Œè‹¥ä¸å­˜åœ¨åˆ™åˆ›å»ºï¼Œè‹¥è¿‡æœŸåˆ™æ›´æ–°ã€‚å¹¶è¿”å›æ ¼å¼åŒ– JSON
      * 
      * @access  public 
-     * @param   string    $UserID             ¶¹°êID
-     * @param   int       $PageSize           ·ÖÒ³´óĞ¡
-     * @param   int       $From               ¿ªÊ¼Î»ÖÃ
-     * @param   int       $ValidTimeSpan      ÓĞĞ§Ê±¼ä£¬Unix Ê±¼ä´Á£¬s
-     * @return  json      ·µ»Ø¸ñÊ½»¯Ó°µ¥
+     * @param   string    $UserID             è±†ç“£ID
+     * @param   int       $PageSize           åˆ†é¡µå¤§å°
+     * @param   int       $From               å¼€å§‹ä½ç½®
+     * @param   int       $ValidTimeSpan      æœ‰æ•ˆæ—¶é—´ï¼ŒUnix æ—¶é—´æˆ³ï¼Œs
+     * @return  json      è¿”å›æ ¼å¼åŒ–å½±å•
      */  
     public static function updateMovieCacheAndReturn($UserID,$PageSize,$From,$ValidTimeSpan){
         if(!$UserID) return json_encode(array());
         $expired = self::__isCacheExpired(__DIR__.'/cache/movie.json',$ValidTimeSpan);
         if($expired!=0){
-            $data=self::__getMovieRawData($UserID);
+			$oldData=json_decode(file_get_contents(__DIR__.'/cache/movie.json'))->data;
+            $data=self::__getMovieRawData($UserID, $oldData[0]->name);
+			array_splice($oldData,0,0,$data);
             $file=fopen(__DIR__.'/cache/movie.json',"w");
-            fwrite($file,json_encode(array('time'=>time(),'data'=>$data)));
+            fwrite($file,json_encode(array('time'=>time(),'data'=>$oldData)));
             fclose($file);
             return self::updateMovieCacheAndReturn($UserID,$PageSize,$From,$ValidTimeSpan);
         }else{
@@ -37,16 +39,20 @@ class DoubanAPI
     }
 
     /**
-     * ¼ì²é»º´æÊÇ·ñ¹ıÆÚ
+     * æ£€æŸ¥ç¼“å­˜æ˜¯å¦è¿‡æœŸ
      * 
      * @access  private
-     * @param   string    $FilePath           »º´æÂ·¾¶
-     * @param   int       $ValidTimeSpan      ÓĞĞ§Ê±¼ä£¬Unix Ê±¼ä´Á£¬s
-     * @return  int       0: Î´¹ıÆÚ; 1:ÒÑ¹ıÆÚ; -1£ºÎŞ»º´æ»ò»º´æÎŞĞ§
+     * @param   string    $FilePath           ç¼“å­˜è·¯å¾„
+     * @param   int       $ValidTimeSpan      æœ‰æ•ˆæ—¶é—´ï¼ŒUnix æ—¶é—´æˆ³ï¼Œs
+     * @return  int       0: æœªè¿‡æœŸ; 1:å·²è¿‡æœŸ; -1ï¼šæ— ç¼“å­˜æˆ–ç¼“å­˜æ— æ•ˆ
      */
     private static function __isCacheExpired($FilePath,$ValidTimeSpan){
         $file=fopen($FilePath,"r");
-        if(!$file) return -1;
+        if(!$file) {
+			$file=fopen($FilePath,"w");
+			fwrite($file, json_encode(array('time'=>'946656000','data'=>array(array("name" => "", "img" => "".$movie_img, "url" => "")))));
+			return -1;
+		}
         $content=json_decode(fread($file,filesize($FilePath)));
         fclose($file);
         if(!$content->time || $content->time<1) return -1;
@@ -55,28 +61,29 @@ class DoubanAPI
     }
 
     /**
-     * ´Ó¶¹°êÍøÒ³½âÎöÓ°µ¥Êı¾İ
+     * ä»è±†ç“£ç½‘é¡µè§£æå½±å•æ•°æ®
      * 
      * @access  private
-     * @param   string    $UserID     ¶¹°êID
-     * @return  array     ·µ»Ø¸ñÊ½»¯ array
+     * @param   string    $UserID     è±†ç“£ID
+     * @return  array     è¿”å›æ ¼å¼åŒ– array
      */
-    private static function __getMovieRawData($UserID){
+    private static function __getMovieRawData($UserID, $oldData){
         $api='https://movie.douban.com/people/'.$UserID.'/collect';
         $data=array();
         while($api!=null){
             $raw=file_get_contents($api);
-            if($raw==null || $raw=="") break;
+            if($raw==null || $raw=="" || !$raw) break;
             $doc = new ParserDom($raw); 
             $itemArray = $doc->find("div.item");
             foreach ($itemArray as $v) {
                 $t = $v->find("li.title", 0);
-                $movie_name = str_replace(strstr(str_replace(array(" ", "¡¡", "\t", "\n", "\r"),
-                                          array("", "", "", "", ""),$t->getPlainText()),"/"),"",str_replace(array(" ", "¡¡", "\t", "\n", "\r"),
+                $movie_name = str_replace(strstr(str_replace(array(" ", "ã€€", "\t", "\n", "\r"),
+                                          array("", "", "", "", ""),$t->getPlainText()),"/"),"",str_replace(array(" ", "ã€€", "\t", "\n", "\r"),
                                           array("", "", "", "", ""),$t->getPlainText()));
                 $movie_img  = $v->find("div.pic a img", 0)->getAttr("src");
                 $movie_url  = $t->find("a", 0)->getAttr("href");
-                $data[] = array("name" => $movie_name, "img" => $movie_img, "url" => $movie_url);
+				if ($oldData == $movie_name) return $data;
+                $data[] = array("name" => $movie_name, "img" => 'https://images.weserv.nl/?url='.$movie_img, "url" => $movie_url);
             }
             $url = $doc->find("span.next a", 0);
             if ($url) {
@@ -120,7 +127,7 @@ class ParserDom {
         }
     }
     /**
-     * ³õÊ¼»¯µÄÊ±ºò¿ÉÒÔ²»ÓÃ´«Èëhtml£¬ºóÃæ¿ÉÒÔ¶à´ÎÊ¹ÓÃ
+     * åˆå§‹åŒ–çš„æ—¶å€™å¯ä»¥ä¸ç”¨ä¼ å…¥htmlï¼Œåé¢å¯ä»¥å¤šæ¬¡ä½¿ç”¨
      * @param null $node
      * @throws \Exception
      */
@@ -160,10 +167,10 @@ class ParserDom {
         }
     }
     /**
-     * Éî¶ÈÓÅÏÈ²éÑ¯
+     * æ·±åº¦ä¼˜å…ˆæŸ¥è¯¢
      *
      * @param string $selector
-     * @param number $idx ÕÒµÚ¼¸¸ö,´Ó0¿ªÊ¼¼ÆËã£¬null ±íÊ¾¶¼·µ»Ø, ¸ºÊı±íÊ¾µ¹ÊıµÚ¼¸¸ö
+     * @param number $idx æ‰¾ç¬¬å‡ ä¸ª,ä»0å¼€å§‹è®¡ç®—ï¼Œnull è¡¨ç¤ºéƒ½è¿”å›, è´Ÿæ•°è¡¨ç¤ºå€’æ•°ç¬¬å‡ ä¸ª
      * @return self|self[]
      */
     public function find($selector, $idx = NULL) {
@@ -195,7 +202,7 @@ class ParserDom {
         return $found;
     }
     /**
-     * ·µ»ØÎÄ±¾ĞÅÏ¢
+     * è¿”å›æ–‡æœ¬ä¿¡æ¯
      *
      * @return string
      */
@@ -203,7 +210,7 @@ class ParserDom {
         return $this->text($this->node);
     }
     /**
-     * »ñÈ¡innerHtml
+     * è·å–innerHtml
      * @return string
      */
     public function innerHtml() {
@@ -215,7 +222,7 @@ class ParserDom {
         return $innerHTML;
     }
     /**
-     * »ñÈ¡outerHtml
+     * è·å–outerHtml
      * @return string|bool
      */
     public function outerHtml() {
@@ -224,7 +231,7 @@ class ParserDom {
         return $doc->saveHTML($doc);
     }
     /**
-     * »ñÈ¡htmlµÄÔªÊôÖµ
+     * è·å–htmlçš„å…ƒå±å€¼
      *
      * @param string $name
      * @return string|null
@@ -237,7 +244,7 @@ class ParserDom {
         return NULL;
     }
     /**
-     * Æ¥Åä
+     * åŒ¹é…
      *
      * @param string $exp
      * @param string $pattern
@@ -265,7 +272,7 @@ class ParserDom {
         return FALSE;
     }
     /**
-     * ·ÖÎö²éÑ¯Óï¾ä
+     * åˆ†ææŸ¥è¯¢è¯­å¥
      *
      * @param string $selector_string
      * @return array
@@ -319,7 +326,7 @@ class ParserDom {
         return $selectors;
     }
     /**
-     * Éî¶È²éÑ¯
+     * æ·±åº¦æŸ¥è¯¢
      *
      * @param \DOMNode $search
      * @param          $idx
@@ -352,7 +359,7 @@ class ParserDom {
         return FALSE;
     }
     /**
-     * »ñÈ¡tidy_nodeÎÄ±¾
+     * è·å–tidy_nodeæ–‡æœ¬
      *
      * @param \DOMNode $node
      * @return string
@@ -361,7 +368,7 @@ class ParserDom {
         return $node->textContent;
     }
     /**
-     * Æ¥Åä½Úµã,ÓÉÓÚ²ÉÈ¡µÄµ¹Ğò²éÕÒ£¬ËùÒÔÊ±¼ä¸´ÔÓ¶ÈÎªn+m*l nÎª×Ü½ÚµãÊı£¬mÎªÆ¥Åä×îºóÒ»¸ö¹æÔòµÄ¸öÊı£¬lÎª¹æÔòµÄÉî¶È,
+     * åŒ¹é…èŠ‚ç‚¹,ç”±äºé‡‡å–çš„å€’åºæŸ¥æ‰¾ï¼Œæ‰€ä»¥æ—¶é—´å¤æ‚åº¦ä¸ºn+m*l nä¸ºæ€»èŠ‚ç‚¹æ•°ï¼Œmä¸ºåŒ¹é…æœ€åä¸€ä¸ªè§„åˆ™çš„ä¸ªæ•°ï¼Œlä¸ºè§„åˆ™çš„æ·±åº¦,
      * @codeCoverageIgnore
      * @param \DOMNode $search
      * @param array $selectors
@@ -375,7 +382,7 @@ class ParserDom {
         list ($tag, $key, $val, $exp, $no_key) = $selectors [$current];
         $pass = TRUE;
         if ($tag === '*' && !$key) {
-            exit('tagÎª*Ê±£¬key²»ÄÜÎª¿Õ');
+            exit('tagä¸º*æ—¶ï¼Œkeyä¸èƒ½ä¸ºç©º');
         }
         if ($tag && $tag != $search->tagName && $tag !== '*') {
             $pass = FALSE;
@@ -426,7 +433,7 @@ class ParserDom {
         }
     }
     /**
-     * »ñÈ¡¸¸Ç×½Úµã
+     * è·å–çˆ¶äº²èŠ‚ç‚¹
      *
      * @param \DOMNode $node
      * @return \DOMNode
