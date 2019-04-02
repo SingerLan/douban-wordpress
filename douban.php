@@ -71,7 +71,7 @@ class DoubanAPI
         $api='https://movie.douban.com/people/'.$UserID.'/collect';
         $data=array();
         while($api!=null){
-            $raw=file_get_contents($api);
+            $raw=self::curl_file_get_contents($api);
             if($raw==null || $raw=="" || !$raw) break;
             $doc = new ParserDom($raw); 
             $itemArray = $doc->find("div.item");
@@ -94,7 +94,21 @@ class DoubanAPI
         }
         return $data;
     }
-
+	
+	public static function curl_file_get_contents($_url){
+		$myCurl = curl_init($_url);
+		//不验证证书
+		curl_setopt($myCurl, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($myCurl, CURLOPT_SSL_VERIFYHOST, false);
+		curl_setopt($myCurl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_REFERER, 'https://www.douban.com');
+		curl_setopt($myCurl,  CURLOPT_HEADER, false);
+		//获取
+		$content = curl_exec($myCurl);
+		//关闭
+		curl_close($myCurl);
+		return $content;
+	}
 }
 
 class ParserDom {
