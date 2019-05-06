@@ -22,7 +22,17 @@ class DoubanAPI
             $file=fopen(__DIR__.'/cache/movie.json',"w");
             fwrite($file,json_encode(array('time'=>time(),'data'=>$oldData)));
             fclose($file);
-            return self::updateMovieCacheAndReturn($UserID,$PageSize,$From,$ValidTimeSpan);
+            $data=$oldData;
+            $total=count($data);
+            if($From<0 || $From>$total-1) echo json_encode(array());
+            else{
+                $end=min($From+$PageSize,$total);
+                $out=array();
+                for ($index=$From; $index<$end; $index++) {
+                    array_push($out,$data[$index]);
+                }
+                return json_encode($out);
+            }
         }else{
             $data=json_decode(file_get_contents(__DIR__.'/cache/movie.json'))->data;
             $total=count($data);
