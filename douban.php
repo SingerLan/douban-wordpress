@@ -60,7 +60,7 @@ class DoubanAPI
         $file=fopen($FilePath,"r");
         if(!$file) {
 			$file=fopen($FilePath,"w");
-			fwrite($file, json_encode(array('time'=>'946656000','data'=>array(array("name" => "", "img" => "".$movie_img, "url" => "")))));
+			fwrite($file, json_encode(array('time'=>'946656000','data'=>array(array("name" => "", "img" => "", "url" => "")))));
 			return -1;
 		}
         $content=json_decode(fread($file,filesize($FilePath)));
